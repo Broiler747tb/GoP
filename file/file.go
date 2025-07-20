@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func createUser(id string, private bool, createdAt time.Time, name string) *bins.Bin {
+func CreateUser(id string, private bool, createdAt time.Time, name string) *bins.Bin {
 	return &bins.Bin{
 		Id:        id,
 		Private:   private,
