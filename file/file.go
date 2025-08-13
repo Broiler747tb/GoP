@@ -31,11 +31,21 @@ func ReadJsonFile(path string) ([]byte, error) {
 			return nil, err
 		}
 		var jsonBytes []byte
-		err = json.Unmarshal(bytes, &jsonBytes)
+		err = json.Unmarshal(bytes, nil)
 		if err != nil {
 			return nil, err
 		}
 		returnByte = jsonBytes
+	} else {
+		file, err := os.Open(path)
+		if err != nil {
+			return nil, err
+		}
+		bytes, err := io.ReadAll(file)
+		if err != nil {
+			return nil, err
+		}
+		returnByte = bytes
 	}
 	return returnByte, nil
 }
