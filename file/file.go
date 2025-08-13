@@ -3,7 +3,6 @@ package file
 import (
 	"GoP/bins"
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -20,22 +19,23 @@ func CreateUser(id string, private bool, createdAt time.Time, name string) *bins
 }
 
 func ReadJsonFile(path string) ([]byte, error) {
-	if !strings.HasSuffix(path, ".json") {
-		return nil, fmt.Errorf("error file is not .json")
+	var returnByte []byte
+	if strings.HasSuffix(path, ".json") {
+		file, err := os.Open(path)
+		defer file.Close()
+		if err != nil {
+			return nil, err
+		}
+		bytes, err := io.ReadAll(file)
+		if err != nil {
+			return nil, err
+		}
+		var jsonBytes []byte
+		err = json.Unmarshal(bytes, &jsonBytes)
+		if err != nil {
+			return nil, err
+		}
+		returnByte = jsonBytes
 	}
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-	bytes, err := io.ReadAll(file)
-	if err != nil {
-		return nil, err
-	}
-	var temp interface{}
-	err = json.Unmarshal(bytes, &temp)
-	if err != nil {
-		return nil, err
-	}
-	return bytes, nil
+	return returnByte, nil
 }
