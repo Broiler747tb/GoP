@@ -22,6 +22,7 @@ func ReadJsonFile(path string) ([]byte, error) {
 	var returnByte []byte
 	if strings.HasSuffix(path, ".json") {
 		file, err := os.Open(path)
+		defer file.Close()
 		if err != nil {
 			return nil, err
 		}
