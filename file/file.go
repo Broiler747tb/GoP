@@ -2,7 +2,6 @@ package file
 
 import (
 	"GoP/bins"
-	"encoding/json"
 	"io"
 	"os"
 	"strings"
@@ -30,12 +29,7 @@ func ReadJsonFile(path string) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		var jsonBytes []byte
-		err = json.Unmarshal(bytes, nil)
-		if err != nil {
-			return nil, err
-		}
-		returnByte = jsonBytes
+		returnByte = bytes
 	} else {
 		file, err := os.Open(path)
 		if err != nil {
