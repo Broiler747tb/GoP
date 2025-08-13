@@ -30,11 +30,12 @@ func ReadJsonFile(path string) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		var jsonBytes []byte
-		err = json.Unmarshal(bytes, &jsonBytes)
+		var jsonString string
+		err = json.Unmarshal(bytes, &jsonString)
 		if err != nil {
 			return nil, err
 		}
+		jsonBytes := []byte(jsonString)
 		returnByte = jsonBytes
 	} else {
 		file, err := os.Open(path)
