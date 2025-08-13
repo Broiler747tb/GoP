@@ -29,3 +29,21 @@ func ToJson(data any) []byte {
 	}
 	return bytes
 }
+
+func LoadBinsFromJson(filename string) (BinList, error) {
+	var binList BinList
+
+	// Читаем файл
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		return binList, fmt.Errorf("ошибка чтения файла: %v", err)
+	}
+
+	// Десериализуем JSON в структуру
+	err = json.Unmarshal(data, &binList)
+	if err != nil {
+		return binList, fmt.Errorf("ошибка парсинга JSON: %v", err)
+	}
+
+	return binList, nil
+}
