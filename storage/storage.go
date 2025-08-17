@@ -11,17 +11,23 @@ type BinList struct {
 	Bins []bins.Bin `json:"bins"`
 }
 
-type BinInterface interface {
+type Bin struct {
+	bins.Bin
 }
 
-func SaveBinJson(Bin bins.Bin) {
+type Manager interface {
+	SaveBinJson(bin Bin)
+	LoadBinsFromJson(filename string) (BinList, error)
+}
+
+func SaveBinJson(bin Bin) {
 	file, err := os.Create("Bin.json")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	defer file.Close()
-	bytes := ToJson(Bin)
+	bytes := ToJson(bin)
 	file.Write(bytes)
 }
 
