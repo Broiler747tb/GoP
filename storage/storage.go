@@ -11,6 +11,9 @@ type BinList struct {
 	Bins []bins.Bin `json:"bins"`
 }
 
+type BinInterface interface {
+}
+
 func SaveBinJson(Bin bins.Bin) {
 	file, err := os.Create("Bin.json")
 	if err != nil {
