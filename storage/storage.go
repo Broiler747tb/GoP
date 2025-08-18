@@ -21,7 +21,7 @@ type PathStruct struct {
 
 type Manager interface {
 	SaveBinJson(bin Bin)
-	LoadBinsFromJson(filename string) (BinList, error)
+	LoadBinsFromJson(P PathStruct) (BinList, error)
 }
 
 func SaveBinJson(bin Bin) {
