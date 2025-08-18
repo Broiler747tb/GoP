@@ -9,12 +9,23 @@ import (
 	"time"
 )
 
-func CreateUser(id string, private bool, createdAt time.Time, name string) *bins.Bin {
-	return &bins.Bin{
-		Id:        id,
-		Private:   private,
-		CreatedAt: createdAt,
-		Name:      name,
+type Manager interface {
+	CreateUser(id string, private bool, createdAt time.Time, name string) *LocBin
+	ReadJsonFile(path string) ([]byte, error)
+}
+
+type LocBin struct {
+	Bin bins.Bin
+}
+
+func (l LocBin) CreateUser(id string, private bool, createdAt time.Time, name string) *LocBin {
+	return &LocBin{
+		Bin: bins.Bin{
+			Id:        id,
+			Private:   private,
+			CreatedAt: createdAt,
+			Name:      name,
+		},
 	}
 }
 
