@@ -15,6 +15,10 @@ type Bin struct {
 	bins.Bin
 }
 
+type PathStruct struct {
+	path string
+}
+
 type Manager interface {
 	SaveBinJson(bin Bin)
 	LoadBinsFromJson(filename string) (BinList, error)
@@ -39,9 +43,9 @@ func ToJson(data any) []byte {
 	return bytes
 }
 
-func LoadBinsFromJson(filename string) (BinList, error) {
+func (P PathStruct) LoadBinsFromJson() (BinList, error) {
 	var binList BinList
-	data, err := os.ReadFile(filename)
+	data, err := os.ReadFile(P.path)
 	if err != nil {
 		return binList, err
 	}
