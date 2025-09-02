@@ -11,14 +11,27 @@ type BinList struct {
 	Bins []bins.Bin `json:"bins"`
 }
 
-func SaveBinJson(Bin bins.Bin) {
+type Bin struct {
+	bins.Bin
+}
+
+type PathStruct struct {
+	path string
+}
+
+type Manager interface {
+	SaveBinJson(bin Bin)
+	LoadBinsFromJson(P PathStruct) (BinList, error)
+}
+
+func SaveBinJson(bin Bin) {
 	file, err := os.Create("Bin.json")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	defer file.Close()
-	bytes := ToJson(Bin)
+	bytes := ToJson(bin)
 	file.Write(bytes)
 }
 
@@ -30,9 +43,9 @@ func ToJson(data any) []byte {
 	return bytes
 }
 
-func LoadBinsFromJson(filename string) (BinList, error) {
+func (P PathStruct) LoadBinsFromJson() (BinList, error) {
 	var binList BinList
-	data, err := os.ReadFile(filename)
+	data, err := os.ReadFile(P.path)
 	if err != nil {
 		return binList, err
 	}
