@@ -9,16 +9,13 @@ import (
 )
 
 func main() {
-	// Load environment variables first
 	err := godotenv.Load()
 	if err != nil {
 		fmt.Printf("Warning: Error loading .env file: %v\n", err)
 	}
 
-	// Initialize API
 	api.Api()
 
-	// Define flags
 	create := flag.Bool("create", false, "create a json")
 	update := flag.Bool("update", false, "update a json")
 	delete := flag.Bool("delete", false, "delete a json")
@@ -31,7 +28,6 @@ func main() {
 
 	flag.Parse()
 
-	// Check if at least one operation is specified
 	operationsCount := 0
 	if *create {
 		operationsCount++
@@ -60,7 +56,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Execute operations
 	if *create {
 		api.Create(file, name)
 	}

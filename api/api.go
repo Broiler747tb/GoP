@@ -14,35 +14,26 @@ import (
 	"time"
 )
 
-const BINS_FILE = "bins.json"
+const binsFile = "bins.json"
 
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
-
-// generateID creates a simple random ID
 func generateID() string {
 	return strconv.Itoa(rand.Intn(1000000))
 }
 
 func Create(filen *string, name *string) {
-	if filen == nil || *filen == "" {
-		fmt.Println("Error: file parameter is required")
+	if *filen == "" {
+		fmt.Println("Error: file name is required")
 		return
 	}
-	if name == nil || *name == "" {
-		fmt.Println("Error: name parameter is required")
+	if *name == "" {
+		fmt.Println("Error: name is required")
 		return
 	}
-
-	// Read the file content
 	fileContent, err := file.ReadJsonFile(*filen)
 	if err != nil {
 		fmt.Printf("Error reading file %s: %v\n", *filen, err)
 		return
 	}
-
-	// Create new bin
 	newBin := storage.Bin{
 		Bin: bins.Bin{
 			Id:        generateID(),
@@ -52,19 +43,14 @@ func Create(filen *string, name *string) {
 		},
 	}
 
-	// Load existing bins
 	binList := loadOrCreateBinsList()
-
-	// Add new bin to the list
 	binList.Bins = append(binList.Bins, newBin.Bin)
 
-	// Save the updated bin list
 	if err := saveBinsList(binList); err != nil {
 		fmt.Printf("Error saving bin list: %v\n", err)
 		return
 	}
 
-	// Save the bin content to a separate file
 	binFileName := fmt.Sprintf("bin_%s.json", newBin.Id)
 	if err := os.WriteFile(binFileName, fileContent, 0644); err != nil {
 		fmt.Printf("Error saving bin content: %v\n", err)
@@ -84,30 +70,25 @@ func Update(filen *string, id *string) {
 		return
 	}
 
-	// Load existing bins
 	binList := loadOrCreateBinsList()
 
-	// Find the bin to update
 	found := false
 	for i, bin := range binList.Bins {
 		if bin.Id == *id {
-			// Read new file content
+
 			fileContent, err := file.ReadJsonFile(*filen)
 			if err != nil {
 				fmt.Printf("Error reading file %s: %v\n", *filen, err)
 				return
 			}
 
-			// Update the bin's timestamp
 			binList.Bins[i].CreatedAt = time.Now()
 
-			// Save updated bin list
 			if err := saveBinsList(binList); err != nil {
 				fmt.Printf("Error saving bin list: %v\n", err)
 				return
 			}
 
-			// Update the bin content file
 			binFileName := fmt.Sprintf("bin_%s.json", *id)
 			if err := os.WriteFile(binFileName, fileContent, 0644); err != nil {
 				fmt.Printf("Error updating bin content: %v\n", err)
@@ -131,26 +112,21 @@ func Delete(id *string) {
 		return
 	}
 
-	// Load existing bins
 	binList := loadOrCreateBinsList()
 
-	// Find and remove the bin
 	found := false
 	for i, bin := range binList.Bins {
 		if bin.Id == *id {
-			// Remove bin from slice
 			binList.Bins = append(binList.Bins[:i], binList.Bins[i+1:]...)
 
-			// Save updated bin list
 			if err := saveBinsList(binList); err != nil {
 				fmt.Printf("Error saving bin list: %v\n", err)
 				return
 			}
 
-			// Delete the bin content file
 			binFileName := fmt.Sprintf("bin_%s.json", *id)
 			if err := os.Remove(binFileName); err != nil {
-				// Don't fail if file doesn't exist
+
 				if !os.IsNotExist(err) {
 					fmt.Printf("Warning: Error deleting bin file: %v\n", err)
 				}
@@ -173,10 +149,8 @@ func Get(id *string) {
 		return
 	}
 
-	// Load existing bins
 	binList := loadOrCreateBinsList()
 
-	// Find the bin
 	var targetBin *bins.Bin
 	for _, bin := range binList.Bins {
 		if bin.Id == *id {
@@ -190,13 +164,11 @@ func Get(id *string) {
 		return
 	}
 
-	// Display bin metadata
 	fmt.Printf("Bin ID: %s\n", targetBin.Id)
 	fmt.Printf("Name: %s\n", targetBin.Name)
 	fmt.Printf("Private: %v\n", targetBin.Private)
 	fmt.Printf("Created At: %s\n", targetBin.CreatedAt.Format(time.RFC3339))
 
-	// Try to read and display bin content
 	binFileName := fmt.Sprintf("bin_%s.json", *id)
 	content, err := os.ReadFile(binFileName)
 	if err != nil {
@@ -208,7 +180,6 @@ func Get(id *string) {
 }
 
 func List() {
-	// Load existing bins
 	binList := loadOrCreateBinsList()
 
 	if len(binList.Bins) == 0 {
@@ -229,44 +200,42 @@ func List() {
 	}
 }
 
-// Helper function to load or create bins list
 func loadOrCreateBinsList() storage.BinList {
 	binList := storage.BinList{}
 
-	if _, err := os.Stat(BINS_FILE); os.IsNotExist(err) {
-		// File doesn't exist, return empty list
+	_, err := os.Stat(binsFile)
+	if os.IsNotExist(err) {
 		return binList
 	}
 
-	data, err := os.ReadFile(BINS_FILE)
+	data, err := os.ReadFile(binsFile)
 	if err != nil {
 		log.Printf("Error reading bins file: %v", err)
 		return binList
 	}
 
-	if err := json.Unmarshal(data, &binList); err != nil {
+	err = json.Unmarshal(data, &binList)
+	if err != nil {
 		log.Printf("Error unmarshaling bins: %v", err)
-		return storage.BinList{} // Return empty list on error
+		return storage.BinList{}
 	}
 
 	return binList
 }
 
-// Helper function to save bins list
 func saveBinsList(binList storage.BinList) error {
 	data, err := json.MarshalIndent(binList, "", "  ")
 	if err != nil {
 		return fmt.Errorf("error marshaling bins: %v", err)
 	}
 
-	if err := os.WriteFile(BINS_FILE, data, 0644); err != nil {
+	if err := os.WriteFile(binsFile, data, 0644); err != nil {
 		return fmt.Errorf("error writing bins file: %v", err)
 	}
 
 	return nil
 }
 
-// Api function to initialize config (call this first)
 func Api() {
 	config.GetConfig()
 	fmt.Println("API initialized successfully")

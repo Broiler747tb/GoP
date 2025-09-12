@@ -24,7 +24,6 @@ type Manager interface {
 	LoadBinsFromJson(P PathStruct) (BinList, error)
 }
 
-// NewPathStruct creates a new PathStruct with the given path
 func NewPathStruct(path string) PathStruct {
 	return PathStruct{Path: path}
 }
@@ -50,7 +49,7 @@ func ToJson(data any) []byte {
 
 func (P PathStruct) LoadBinsFromJson() (BinList, error) {
 	var binList BinList
-	data, err := os.ReadFile(P.Path) // Use exported Path field
+	data, err := os.ReadFile(P.Path)
 	if err != nil {
 		return binList, err
 	}
@@ -61,7 +60,6 @@ func (P PathStruct) LoadBinsFromJson() (BinList, error) {
 	return binList, nil
 }
 
-// LoadBinsFromPath is a convenience function
 func LoadBinsFromPath(path string) (BinList, error) {
 	pathStruct := NewPathStruct(path)
 	return pathStruct.LoadBinsFromJson()
