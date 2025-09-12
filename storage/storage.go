@@ -16,12 +16,16 @@ type Bin struct {
 }
 
 type PathStruct struct {
-	path string
+	Path string // Exported field
 }
 
 type Manager interface {
 	SaveBinJson(bin Bin)
 	LoadBinsFromJson(P PathStruct) (BinList, error)
+}
+
+func NewPathStruct(path string) PathStruct {
+	return PathStruct{Path: path}
 }
 
 func SaveBinJson(bin Bin) {
@@ -36,7 +40,7 @@ func SaveBinJson(bin Bin) {
 }
 
 func ToJson(data any) []byte {
-	bytes, err := json.Marshal(data)
+	bytes, err := json.MarshalIndent(data, "", "  ") // Added indentation for readability
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -45,7 +49,7 @@ func ToJson(data any) []byte {
 
 func (P PathStruct) LoadBinsFromJson() (BinList, error) {
 	var binList BinList
-	data, err := os.ReadFile(P.path)
+	data, err := os.ReadFile(P.Path)
 	if err != nil {
 		return binList, err
 	}
@@ -54,4 +58,9 @@ func (P PathStruct) LoadBinsFromJson() (BinList, error) {
 		return binList, err
 	}
 	return binList, nil
+}
+
+func LoadBinsFromPath(path string) (BinList, error) {
+	pathStruct := NewPathStruct(path)
+	return pathStruct.LoadBinsFromJson()
 }
