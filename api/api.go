@@ -6,6 +6,7 @@ import (
 	"GoP/file"
 	"GoP/storage"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"math/rand"
@@ -20,20 +21,16 @@ func generateID() string {
 	return strconv.Itoa(rand.Intn(1000000))
 }
 
-func Create(filen *string, name *string) {
+func Create(filen *string, name *string) error {
 	if *filen == "" {
 		fmt.Println("Error: file name is required")
-		return
+		return errors.New("err: no file name")
 	}
 	if *name == "" {
 		fmt.Println("Error: name is required")
-		return
+		return errors.New("err: no name")
 	}
-	fileContent, err := file.ReadJsonFile(*filen)
-	if err != nil {
-		fmt.Printf("Error reading file %s: %v\n", *filen, err)
-		return
-	}
+
 	newBin := storage.Bin{
 		Bin: bins.Bin{
 			Id:        generateID(),
@@ -43,56 +40,66 @@ func Create(filen *string, name *string) {
 		},
 	}
 
-	binList := loadOrCreateBinsList()
+	newBinBytes, err := json.Marshal(newBin)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	binList, err := loadOrCreateBinsList()
+	if err != nil {
+		fmt.Println(err)
+	}
 	binList.Bins = append(binList.Bins, newBin.Bin)
 
 	if err := saveBinsList(binList); err != nil {
 		fmt.Printf("Error saving bin list: %v\n", err)
-		return
+		return errors.New("err: failed to save the bin list")
 	}
 
-	binFileName := fmt.Sprintf("bin_%s.json", newBin.Id)
-	if err := os.WriteFile(binFileName, fileContent, 0644); err != nil {
+	if err := os.WriteFile(*filen, newBinBytes, 0644); err != nil {
 		fmt.Printf("Error saving bin content: %v\n", err)
-		return
+		return errors.New("err: failed to save the bin content")
 	}
 
 	fmt.Printf("Created bin with ID: %s, Name: %s\n", newBin.Id, newBin.Name)
+	return nil
 }
 
-func Update(filen *string, id *string) {
-	if filen == nil || *filen == "" {
+func Update(filen *string, id *string) error {
+	if *filen == "" {
 		fmt.Println("Error: file parameter is required")
-		return
+		return errors.New("err: file parameter is required")
 	}
-	if id == nil || *id == "" {
+	if *id == "" {
 		fmt.Println("Error: id parameter is required")
-		return
+		return errors.New("err: id parameter is required")
 	}
 
-	binList := loadOrCreateBinsList()
+	binList, err := loadOrCreateBinsList()
+	if err != nil {
+		panic(err)
+	}
 
 	found := false
 	for i, bin := range binList.Bins {
 		if bin.Id == *id {
-
 			fileContent, err := file.ReadJsonFile(*filen)
 			if err != nil {
 				fmt.Printf("Error reading file %s: %v\n", *filen, err)
-				return
+				return errors.New("err: failed to read a .json file")
 			}
 
 			binList.Bins[i].CreatedAt = time.Now()
 
 			if err := saveBinsList(binList); err != nil {
 				fmt.Printf("Error saving bin list: %v\n", err)
-				return
+				return errors.New("err: failed to read the bin list")
 			}
 
 			binFileName := fmt.Sprintf("bin_%s.json", *id)
 			if err := os.WriteFile(binFileName, fileContent, 0644); err != nil {
 				fmt.Printf("Error updating bin content: %v\n", err)
-				return
+				return errors.New("err: failed to update the bin content")
 			}
 
 			fmt.Printf("Updated bin with ID: %s\n", *id)
@@ -103,16 +110,21 @@ func Update(filen *string, id *string) {
 
 	if !found {
 		fmt.Printf("Bin with ID %s not found\n", *id)
+		return errors.New("err: bin with given id was not found")
 	}
+	return nil
 }
 
-func Delete(id *string) {
+func Delete(id *string, filen *string) error {
 	if id == nil || *id == "" {
 		fmt.Println("Error: id parameter is required")
-		return
+		return errors.New("err: id parameter is required")
 	}
 
-	binList := loadOrCreateBinsList()
+	binList, err := loadOrCreateBinsList()
+	if err != nil {
+		panic("loading or creating bins failed")
+	}
 
 	found := false
 	for i, bin := range binList.Bins {
@@ -121,14 +133,15 @@ func Delete(id *string) {
 
 			if err := saveBinsList(binList); err != nil {
 				fmt.Printf("Error saving bin list: %v\n", err)
-				return
+				return errors.New("err: failed to save the bin list")
 			}
 
-			binFileName := fmt.Sprintf("bin_%s.json", *id)
+			binFileName := fmt.Sprint(*filen)
 			if err := os.Remove(binFileName); err != nil {
 
 				if !os.IsNotExist(err) {
 					fmt.Printf("Warning: Error deleting bin file: %v\n", err)
+					return errors.New("err: failed to delete the bin file")
 				}
 			}
 
@@ -140,16 +153,21 @@ func Delete(id *string) {
 
 	if !found {
 		fmt.Printf("Bin with ID %s not found\n", *id)
+		return errors.New("err: bin with given id was not found")
 	}
+	return nil
 }
 
-func Get(id *string) {
-	if id == nil || *id == "" {
+func Get(id *string) error {
+	if *id == "" {
 		fmt.Println("Error: id parameter is required")
-		return
+		return errors.New("err: id parameter is required")
 	}
 
-	binList := loadOrCreateBinsList()
+	binList, err := loadOrCreateBinsList()
+	if err != nil {
+		panic("loading or creating bins failed")
+	}
 
 	var targetBin *bins.Bin
 	for _, bin := range binList.Bins {
@@ -161,35 +179,37 @@ func Get(id *string) {
 
 	if targetBin == nil {
 		fmt.Printf("Bin with ID %s not found\n", *id)
-		return
+		return errors.New("err: bin with given id was not found")
 	}
 
 	fmt.Printf("Bin ID: %s\n", targetBin.Id)
 	fmt.Printf("Name: %s\n", targetBin.Name)
 	fmt.Printf("Private: %v\n", targetBin.Private)
-	fmt.Printf("Created At: %s\n", targetBin.CreatedAt.Format(time.RFC3339))
+	fmt.Printf("Created At: %s\n", targetBin.CreatedAt.Format("2006-01-02 15:04:05"))
 
 	binFileName := fmt.Sprintf("bin_%s.json", *id)
 	content, err := os.ReadFile(binFileName)
 	if err != nil {
 		fmt.Printf("Warning: Could not read bin content: %v\n", err)
-		return
+		return errors.New("err: failed to read the bin content")
 	}
 
 	fmt.Printf("Content:\n%s\n", string(content))
+	return nil
 }
 
-func List() {
-	binList := loadOrCreateBinsList()
+func List() error {
+	binList, err := loadOrCreateBinsList()
+	if err != nil {
+		panic("loading or creating bins failed")
+	}
 
 	if len(binList.Bins) == 0 {
 		fmt.Println("No bins found")
-		return
 	}
 
 	fmt.Printf("Found %d bin(s):\n", len(binList.Bins))
 	fmt.Println("ID\t\tName\t\tPrivate\tCreated At")
-	fmt.Println("--\t\t----\t\t-------\t----------")
 
 	for _, bin := range binList.Bins {
 		fmt.Printf("%s\t\t%s\t\t%v\t%s\n",
@@ -198,29 +218,31 @@ func List() {
 			bin.Private,
 			bin.CreatedAt.Format("2006-01-02 15:04:05"))
 	}
+	return nil
 }
 
-func loadOrCreateBinsList() storage.BinList {
+func loadOrCreateBinsList() (storage.BinList, error) {
 	binList := storage.BinList{}
 
 	_, err := os.Stat(binsFile)
 	if os.IsNotExist(err) {
-		return binList
+		fmt.Println(err)
+		return binList, err
 	}
 
 	data, err := os.ReadFile(binsFile)
 	if err != nil {
 		log.Printf("Error reading bins file: %v", err)
-		return binList
+		return binList, err
 	}
 
 	err = json.Unmarshal(data, &binList)
 	if err != nil {
 		log.Printf("Error unmarshaling bins: %v", err)
-		return storage.BinList{}
+		return storage.BinList{}, err
 	}
 
-	return binList
+	return binList, nil
 }
 
 func saveBinsList(binList storage.BinList) error {
