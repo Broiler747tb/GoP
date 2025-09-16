@@ -56,8 +56,7 @@ func Create(filen *string, name *string) error {
 		return errors.New("err: failed to save the bin list")
 	}
 
-	binFileName := fmt.Sprintf("bin_%s.json", newBin.Id)
-	if err := os.WriteFile(binFileName, newBinBytes, 0644); err != nil {
+	if err := os.WriteFile(*filen, newBinBytes, 0644); err != nil {
 		fmt.Printf("Error saving bin content: %v\n", err)
 		return errors.New("err: failed to save the bin content")
 	}
@@ -116,7 +115,7 @@ func Update(filen *string, id *string) error {
 	return nil
 }
 
-func Delete(id *string) error {
+func Delete(id *string, filen *string) error {
 	if id == nil || *id == "" {
 		fmt.Println("Error: id parameter is required")
 		return errors.New("err: id parameter is required")
@@ -137,7 +136,7 @@ func Delete(id *string) error {
 				return errors.New("err: failed to save the bin list")
 			}
 
-			binFileName := fmt.Sprintf("bin_%s.json", *id)
+			binFileName := fmt.Sprint(*filen)
 			if err := os.Remove(binFileName); err != nil {
 
 				if !os.IsNotExist(err) {
